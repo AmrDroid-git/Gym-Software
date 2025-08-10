@@ -1,7 +1,16 @@
 import sqlite3
+import os
 
-# Connect to SQLite (creates file if not exists)
-conn = sqlite3.connect("gym.db")
+# --- Create folders ---
+base_dir = os.path.dirname(os.path.abspath(__file__))  # current directory
+faces_dir = os.path.join(base_dir, "faces")
+old_faces_dir = os.path.join(faces_dir, "oldFaces")
+
+# create folders if they don't exist
+os.makedirs(old_faces_dir, exist_ok=True)
+
+# --- Connect to SQLite (creates file if not exists) ---
+conn = sqlite3.connect(os.path.join(base_dir, "gym.db"))
 cursor = conn.cursor()
 
 # Enable foreign key support
@@ -49,4 +58,5 @@ CREATE TABLE IF NOT EXISTS entries (
 conn.commit()
 conn.close()
 
-print("Database gym.db created successfully with ON DELETE SET NULL for plan_id!")
+print("Database gym.db created successfully!")
+print(f"Folders created: {faces_dir} and {old_faces_dir}")

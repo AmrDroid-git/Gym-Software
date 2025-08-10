@@ -6,4 +6,6 @@ venv/
 .idea/
 .vscode/
 *.db
+faces/
+oldFaces/
 *.log
