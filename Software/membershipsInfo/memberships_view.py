@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtSql import QSqlTableModel
 from PyQt6.QtWidgets import QHeaderView
+from .income_summary import show_income_for_period
 
 
 class MembershipsViewDialog(QDialog):
@@ -30,6 +31,9 @@ class MembershipsViewDialog(QDialog):
         btn_row.addWidget(delete_btn)
         btn_row.addStretch(1)
         layout.addLayout(btn_row)
+        income_pdf_btn = QPushButton("Income Summary")
+        income_pdf_btn.clicked.connect(lambda: show_income_for_period(self._db, self))
+        btn_row.addWidget(income_pdf_btn)
 
         # Table
         self.table = QTableView(self)
