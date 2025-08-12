@@ -7,29 +7,45 @@ from typing import Optional
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QLabel, QDialogButtonBox, QPushButton, QWidget
+    QDialog, QVBoxLayout, QLabel, QDialogButtonBox, QPushButton, QWidget, QHBoxLayout
 )
 
-# --- Config ---
-ANDROID_DIR = "/sdcard/Gymphotos"  # folder on the phone
-APP_DATA = Path.home() / "Documents" / "GymSoftware"
-INBOX_DIR = APP_DATA / "phone_inbox"
+# ---------------- Paths (your logic kept) ----------------
+ANDROID_DIR = "/sdcard/Gymphotos"
 
-# --- ADB helpers (silent, resilient) ---
+def _documents_dir() -> Path:
+    # Use Windows Known Folder when available; fallback otherwise
+    try:
+        if os.name == "nt":
+            from ctypes import windll, wintypes, byref
+            FOLDERID_Documents = (0xFDD39AD0, 0x238F, 0x46AF, 0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7)
+            SHGetKnownFolderPath = windll.shell32.SHGetKnownFolderPath
+            SHGetKnownFolderPath.argtypes = [wintypes.GUID, wintypes.DWORD, wintypes.HANDLE, wintypes.LPWSTR]
+            p = wintypes.LPWSTR()
+            SHGetKnownFolderPath(wintypes.GUID(*FOLDERID_Documents), 0, 0, byref(p))
+            return Path(p.value)
+    except Exception:
+        pass
+    return Path.home() / "Documents"
+
+APP_DATA_DIR = _documents_dir() / "GymSoftware"
+INBOX_DIR = APP_DATA_DIR / "phone_inbox"
+
+# ---------------- ADB helpers (hardened) ----------------
 def _adb_path() -> str:
-    # 1) explicit env
+    # 1) env override
     p = os.getenv("ADB_PATH")
     if p and Path(p).exists():
         return p
-    # 2) bundled next to the .exe (PyInstaller) or module dir
+    # 2) bundled with PyInstaller (next to the exe) or a local ./adb folder
     base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
     for cand in (base / "adb.exe", base / "adb", base / "adb" / "adb.exe"):
         if cand.exists():
             return str(cand)
-    # 3) PATH
+    # 3) system PATH
     return shutil.which("adb") or "adb"
 
-# Precompute Windows-specific flags to avoid popping consoles
+# Hide spawned consoles on Windows and avoid UI stalls
 _STARTUPINFO = None
 _CREATE_NO_WINDOW = 0
 if os.name == "nt":
@@ -38,10 +54,9 @@ if os.name == "nt":
     _CREATE_NO_WINDOW = 0x08000000
 
 def _run_adb(args: list[str], timeout: float = 2.0) -> tuple[int, str, str]:
-    cmd = [_adb_path()] + args
     try:
         p = subprocess.run(
-            cmd,
+            [_adb_path()] + args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -64,7 +79,6 @@ def adb_dir_exists(remote_dir: str) -> bool:
     return code == 0 and "OK" in out
 
 def newest_jpg(remote_dir: str) -> Optional[str]:
-    # list newest first; ignore if none
     code, out, _ = _run_adb(["shell", f"ls -1t {remote_dir}/*.jpg 2>/dev/null"])
     if code != 0 or not out:
         return None
@@ -81,11 +95,11 @@ def pull_unique(remote_path: str, dest_dir: Path) -> Path:
     _run_adb(["pull", remote_path, str(target)])
     return target
 
-# --- Dialog ---
+# ---------------- Dialog ----------------
 class PhoneCaptureDialog(QDialog):
     """
     Waits for a new JPG in ANDROID_DIR, pulls it to INBOX_DIR,
-    shows preview, and exposes 'selected_path' on Accept.
+    shows a preview, Accept exposes 'selected_path'.
     """
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -95,7 +109,7 @@ class PhoneCaptureDialog(QDialog):
         self._baseline: Optional[str] = None
         self.selected_path: Optional[Path] = None
 
-        v = QVBoxLayout(self)
+        self.v = QVBoxLayout(self)
         self.info = QLabel("", self)
         self.info.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -112,25 +126,24 @@ class PhoneCaptureDialog(QDialog):
         self.btns.addButton(self.btn_again, QDialogButtonBox.ButtonRole.ResetRole)
         self.btns.addButton(self.btn_close, QDialogButtonBox.ButtonRole.RejectRole)
 
-        v.addWidget(self.info)
-        v.addWidget(self.preview, 1)
-        v.addWidget(self.btns)
+        self.v.addWidget(self.info)
+        self.v.addWidget(self.preview, 1)
+        self.v.addWidget(self.btns)
 
         self.btn_accept.clicked.connect(self._accept)
         self.btn_again.clicked.connect(self._reset_waiting)
         self.btn_close.clicked.connect(self.reject)
 
         self.timer = QTimer(self)
-        self.timer.setInterval(1000)  # poll every 1s
+        self.timer.setInterval(1000)   # 1s polling
         self.timer.timeout.connect(self._tick)
 
         self._enter_waiting()
 
-    # States
     def _enter_waiting(self):
         INBOX_DIR.mkdir(parents=True, exist_ok=True)
 
-        code, _, err = _run_adb(["version"])
+        code, _, _ = _run_adb(["version"])
         if code == 127:
             self._set_info("ADB not found. Bundle adb.exe or set ADB_PATH.")
         elif not adb_device_ok():
@@ -138,7 +151,7 @@ class PhoneCaptureDialog(QDialog):
         elif not adb_dir_exists(ANDROID_DIR):
             self._set_info(f"Waiting for folder on phone: {ANDROID_DIR}")
         else:
-            self._set_info("Waiting for a picture… open phone camera and shoot.")
+            self._set_info("Waiting for a picture… open camera and take a photo.")
 
         self.selected_path = None
         self.btn_accept.setEnabled(False)
@@ -166,9 +179,8 @@ class PhoneCaptureDialog(QDialog):
         self.btn_accept.setEnabled(True)
         self.btn_again.setEnabled(True)
 
-    # Tick
     def _tick(self):
-        # Quick checks; avoid blocking the UI
+        # fast exits avoid blocking the UI
         if not adb_device_ok() or not adb_dir_exists(ANDROID_DIR):
             return
         current = newest_jpg(ANDROID_DIR)
@@ -178,7 +190,6 @@ class PhoneCaptureDialog(QDialog):
             local = pull_unique(current, INBOX_DIR)
             self._enter_showing(local)
 
-    # Helpers
     def _set_info(self, text: str):
         self.info.setText(text)
 

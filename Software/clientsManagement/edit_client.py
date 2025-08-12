@@ -10,9 +10,26 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QImage
 from PyQt6.QtSql import QSqlQuery
 
-FACES_DIR = Path("faces")
+# --- use Documents\GymSoftware\faces instead of local 'faces' ---
+from ctypes import windll, wintypes, byref
+
+def _documents_dir() -> Path:
+    try:
+        # FOLDERID_Documents
+        FOLDERID_Documents = (0xFDD39AD0, 0x238F, 0x46AF, 0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7)
+        SHGetKnownFolderPath = windll.shell32.SHGetKnownFolderPath
+        SHGetKnownFolderPath.argtypes = [wintypes.GUID, wintypes.DWORD, wintypes.HANDLE, wintypes.LPWSTR]
+        p = wintypes.LPWSTR()
+        SHGetKnownFolderPath(wintypes.GUID(*FOLDERID_Documents), 0, 0, byref(p))
+        return Path(p.value)
+    except Exception:
+        return Path.home() / "Documents"
+
+APP_DATA_DIR = _documents_dir() / "GymSoftware"
+FACES_DIR = APP_DATA_DIR / "faces"
 OLD_FACES_DIR = FACES_DIR / "oldFaces"
 OLD_FACES_DIR.mkdir(parents=True, exist_ok=True)
+# -----------------------------------------------------------------
 
 def _safe_name(text: str) -> str:
     return "".join(ch for ch in text.strip() if ch.isalnum() or ch in (" ", "_", "-")).strip().replace(" ", "_")
@@ -58,7 +75,7 @@ def _replace_picture(db, client_id: int, old_path_str: str | None, new_src: Path
             moved_name = f"{old_path.stem}__OLD_{ts}{old_path.suffix}"
             try:
                 shutil.move(str(old_path), str(OLD_FACES_DIR / moved_name))
-            except Exception as e:
+            except Exception:
                 # not fatal, just warn
                 pass
 

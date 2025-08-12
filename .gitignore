@@ -1,12 +1,44 @@
+# Python cache and build
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+dist/
+build/
+*.spec
+
+# Virtual environments
 .env
-venv/
 .venv/
+venv/
+
+# IDE / Editor settings
 .idea/
 .vscode/
+*.iml
+
+# Databases and data files
 *.db
+*.sqlite
+*.sqlite3
+*.ldb
+*.log
 faces/
 oldFaces/
-*.log
-*.ldb
+
+# PyInstaller output
+GymSoftware/
+GymSoftware.exe
+
+# Android/Gradle build files
+.gradle/
+build/
+local.properties
+*.apk
+*.ap_
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

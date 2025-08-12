@@ -1,5 +1,4 @@
-('C:\\Users\\amrdr\\OneDrive\\Bureau\\Gym '
- 'Software\\Software\\build\\GymSoftware\\GymSoftware.pkg',
+('C:\\Users\\amrdr\\OneDrive\\Bureau\\repack\\build\\GymSoftware\\GymSoftware.pkg',
  {'BINARY': True,
   'DATA': True,
   'EXECUTABLE': True,
@@ -11,28 +10,22 @@
   'SYMLINK': False},
  [('pyi-contents-directory _internal', '', 'OPTION'),
   ('PYZ-00.pyz',
-   'C:\\Users\\amrdr\\OneDrive\\Bureau\\Gym '
-   'Software\\Software\\build\\GymSoftware\\PYZ-00.pyz',
+   'C:\\Users\\amrdr\\OneDrive\\Bureau\\repack\\build\\GymSoftware\\PYZ-00.pyz',
    'PYZ'),
   ('struct',
-   'C:\\Users\\amrdr\\OneDrive\\Bureau\\Gym '
-   'Software\\Software\\build\\GymSoftware\\localpycs\\struct.pyc',
+   'C:\\Users\\amrdr\\OneDrive\\Bureau\\repack\\build\\GymSoftware\\localpycs\\struct.pyc',
    'PYMODULE'),
   ('pyimod01_archive',
-   'C:\\Users\\amrdr\\OneDrive\\Bureau\\Gym '
-   'Software\\Software\\build\\GymSoftware\\localpycs\\pyimod01_archive.pyc',
+   'C:\\Users\\amrdr\\OneDrive\\Bureau\\repack\\build\\GymSoftware\\localpycs\\pyimod01_archive.pyc',
    'PYMODULE'),
   ('pyimod02_importers',
-   'C:\\Users\\amrdr\\OneDrive\\Bureau\\Gym '
-   'Software\\Software\\build\\GymSoftware\\localpycs\\pyimod02_importers.pyc',
+   'C:\\Users\\amrdr\\OneDrive\\Bureau\\repack\\build\\GymSoftware\\localpycs\\pyimod02_importers.pyc',
    'PYMODULE'),
   ('pyimod03_ctypes',
-   'C:\\Users\\amrdr\\OneDrive\\Bureau\\Gym '
-   'Software\\Software\\build\\GymSoftware\\localpycs\\pyimod03_ctypes.pyc',
+   'C:\\Users\\amrdr\\OneDrive\\Bureau\\repack\\build\\GymSoftware\\localpycs\\pyimod03_ctypes.pyc',
    'PYMODULE'),
   ('pyimod04_pywin32',
-   'C:\\Users\\amrdr\\OneDrive\\Bureau\\Gym '
-   'Software\\Software\\build\\GymSoftware\\localpycs\\pyimod04_pywin32.pyc',
+   'C:\\Users\\amrdr\\OneDrive\\Bureau\\repack\\build\\GymSoftware\\localpycs\\pyimod04_pywin32.pyc',
    'PYMODULE'),
   ('pyiboot01_bootstrap',
    'C:\\Users\\amrdr\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyInstaller\\loader\\pyiboot01_bootstrap.py',
@@ -46,9 +39,7 @@
   ('pyi_rth_pkgutil',
    'C:\\Users\\amrdr\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py',
    'PYSOURCE'),
-  ('main',
-   'C:\\Users\\amrdr\\OneDrive\\Bureau\\Gym Software\\Software\\main.py',
-   'PYSOURCE')],
+  ('main', 'C:\\Users\\amrdr\\OneDrive\\Bureau\\repack\\main.py', 'PYSOURCE')],
  'python313.dll',
  True,
  False,

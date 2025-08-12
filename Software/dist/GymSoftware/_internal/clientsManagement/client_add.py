@@ -10,10 +10,25 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QImage
 from PyQt6.QtSql import QSqlQuery
 from .phone_capture import PhoneCaptureDialog
-from datetime import datetime
 
-FACES_DIR = Path("faces")
-FACES_DIR.mkdir(exist_ok=True)
+# --- use Documents\GymSoftware\faces instead of a local 'faces' folder ---
+from ctypes import windll, wintypes, byref
+
+def _documents_dir() -> Path:
+    try:
+        # FOLDERID_Documents
+        FOLDERID_Documents = (0xFDD39AD0, 0x238F, 0x46AF, 0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7)
+        SHGetKnownFolderPath = windll.shell32.SHGetKnownFolderPath
+        SHGetKnownFolderPath.argtypes = [wintypes.GUID, wintypes.DWORD, wintypes.HANDLE, wintypes.LPWSTR]
+        p = wintypes.LPWSTR()
+        SHGetKnownFolderPath(wintypes.GUID(*FOLDERID_Documents), 0, 0, byref(p))
+        return Path(p.value)
+    except Exception:
+        return Path.home() / "Documents"
+
+FACES_DIR = _documents_dir() / "GymSoftware" / "faces"
+FACES_DIR.mkdir(parents=True, exist_ok=True)
+# --------------------------------------------------------------------------
 
 def _safe_name(text: str) -> str:
     return "".join(ch for ch in text.strip() if ch.isalnum() or ch in (" ", "_", "-")).strip().replace(" ", "_")
@@ -90,8 +105,7 @@ class AddClientDialog(QDialog):
                 return
         self.accept()
         
-        
-    #new function
+    # new function
     def _take_from_phone(self):
         dlg = PhoneCaptureDialog(self)
         if dlg.exec():  # Accepted
@@ -100,8 +114,6 @@ class AddClientDialog(QDialog):
                 self.pic_label.setText(self._img.name)
                 self.pic_label.setStyleSheet("")
         
-        
-
 def _insert_client(db, full_name: str, id_card: int, phone: int | None, picture_path: str) -> tuple[bool, str]:
     q = QSqlQuery(db)
     q.prepare("""
@@ -151,5 +163,3 @@ def create_add_client_button(parent, db, on_saved=lambda: None) -> QPushButton:
 
     btn.clicked.connect(on_click)
     return btn
-
-
