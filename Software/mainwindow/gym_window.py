@@ -12,6 +12,8 @@ from clientsManagement.client_view import ClientInfoDialog
 from membershipsInfo.memberships_view import MembershipsViewDialog
 from membershipsPlans.membership_plans_view import MembershipPlansViewDialog
 
+from entries_management.entries_view import EntriesViewDialog
+
 TABLE_NAME = "Client"
 
 # Map visible names -> actual DB column names
@@ -62,10 +64,14 @@ class GymMainWindow(QMainWindow):
 
         plans_btn = QPushButton("Membership Plans")
         plans_btn.clicked.connect(self._open_membership_plans_view)
+        
+        entries_btn = QPushButton("Entries")
+        entries_btn.clicked.connect(self._open_entries_view)
 
         top.addWidget(add_btn)
         top.addWidget(memberships_btn)
         top.addWidget(plans_btn)
+        top.addWidget(entries_btn)
         top.addStretch(1)
         main.addLayout(top)
 
@@ -189,4 +195,9 @@ class GymMainWindow(QMainWindow):
 
     def _open_membership_plans_view(self):
         dlg = MembershipPlansViewDialog(self.db, parent=self)
+        dlg.exec()
+
+    
+    def _open_entries_view(self):
+        dlg = EntriesViewDialog(self.db, parent=self)
         dlg.exec()

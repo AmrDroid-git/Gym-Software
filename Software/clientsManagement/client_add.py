@@ -9,6 +9,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QImage
 from PyQt6.QtSql import QSqlQuery
+from .phone_capture import PhoneCaptureDialog
+from datetime import datetime
 
 FACES_DIR = Path("faces")
 FACES_DIR.mkdir(exist_ok=True)
@@ -42,12 +44,17 @@ class AddClientDialog(QDialog):
         self.pic_label = QLabel("No file chosen"); self.pic_label.setStyleSheet("color: gray;")
         choose = QPushButton("Choose Picture…"); choose.clicked.connect(self._choose_pic)
         row = QHBoxLayout(); row.addWidget(self.pic_label, 1); row.addWidget(choose, 0)
+        
+        # NEW: take from phone (ADB)
+        take_from_phone = QPushButton("Take picture from phone")
+        take_from_phone.clicked.connect(self._take_from_phone)
 
         form.addRow("Full name:", self.name_edit)
         form.addRow("ID card:", self.id_card_edit)
         form.addRow("Phone:", self.phone_edit)
         form.addRow(QWidget())
         form.addRow(row)
+        form.addRow(QWidget(), take_from_phone)
 
         btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         btns.accepted.connect(self._validate_then_accept); btns.rejected.connect(self.reject)
@@ -82,17 +89,30 @@ class AddClientDialog(QDialog):
                 QMessageBox.warning(self, "Invalid phone", "Phone must be a number (or leave empty).")
                 return
         self.accept()
+        
+        
+    #new function
+    def _take_from_phone(self):
+        dlg = PhoneCaptureDialog(self)
+        if dlg.exec():  # Accepted
+            if dlg.selected_path:
+                self._img = Path(dlg.selected_path)
+                self.pic_label.setText(self._img.name)
+                self.pic_label.setStyleSheet("")
+        
+        
 
 def _insert_client(db, full_name: str, id_card: int, phone: int | None, picture_path: str) -> tuple[bool, str]:
     q = QSqlQuery(db)
     q.prepare("""
-        INSERT INTO Client (full_name, id_card, phone_number, role, picture)
-        VALUES (?, ?, ?, 'client', ?)
-    """)
+    INSERT INTO Client (full_name, id_card, phone_number, role, picture, created_at)
+    VALUES (?, ?, ?, 'client', ?, ?)
+""")
     q.addBindValue(full_name)
     q.addBindValue(id_card)
     q.addBindValue(phone)
     q.addBindValue(picture_path)
+    q.addBindValue(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     if not q.exec():
         return False, q.lastError().text()
     return True, "ok"
@@ -131,3 +151,5 @@ def create_add_client_button(parent, db, on_saved=lambda: None) -> QPushButton:
 
     btn.clicked.connect(on_click)
     return btn
+
+

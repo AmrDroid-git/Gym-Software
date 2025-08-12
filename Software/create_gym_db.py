@@ -5,9 +5,11 @@ import os
 base_dir = os.path.dirname(os.path.abspath(__file__))  # current directory
 faces_dir = os.path.join(base_dir, "faces")
 old_faces_dir = os.path.join(faces_dir, "oldFaces")
+phone_inbox_dir = os.path.join(base_dir, "phone_inbox")
 
 # create folders if they don't exist
 os.makedirs(old_faces_dir, exist_ok=True)
+os.makedirs(phone_inbox_dir, exist_ok=True)
 
 # --- Connect to SQLite (creates file if not exists) ---
 conn = sqlite3.connect(os.path.join(base_dir, "gym.db"))
@@ -59,4 +61,4 @@ conn.commit()
 conn.close()
 
 print("Database gym.db created successfully!")
-print(f"Folders created: {faces_dir} and {old_faces_dir}")
+print(f"Folders created: {faces_dir}, {old_faces_dir}, and {phone_inbox_dir}")
